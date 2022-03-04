@@ -83,11 +83,13 @@ export class StudentCard extends Vue {
         this.updateRoute(newVal)
     }
 
-    @Watch('activeStudentCard')
+    @Watch('activeStudentCard',{deep:true})
     watchActiveStudentCard(newVal, oldVal) {
-        if (newVal && newVal.video) {
+        if (newVal && newVal.videoId) {
             this.$nextTick(() => {
-                this.updateFileSrc(newVal.video.type)
+                console.log("video");
+                
+                this.updateFileSrc("video")
             })
         }
     }
@@ -142,7 +144,7 @@ export class StudentCard extends Vue {
     }
 
     updateFileSrc(format) {
-        store.dispatch('getFileUrl', {
+        store.dispatch('getStudentFileUrl', {
             cardId: this.activeStudentCard.id,
             format: format
         }).then(url => {

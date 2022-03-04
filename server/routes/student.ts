@@ -196,7 +196,7 @@ app.get('/student/card/:cardId/:format', (req, res) => {
       const Key = `${cardId}/${filename}`
       getSignedUrl(Key).then(url => {
         // res.send(`<img src="${url}">`)
-        res.redirect(url)
+        res.send(url)
       })
     })
 })
