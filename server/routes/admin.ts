@@ -3,7 +3,7 @@ import app from "../app";
 import {
   checkAdminLogin,
   checkAdminPermission,
-  mockAdminLogin
+  mockAdminLogin,
 } from "../authentication";
 import { Logger } from "../logger";
 import {
@@ -20,7 +20,7 @@ import {
   Notification,
   File,
   Sponsor,
-  Document
+  Document,
 } from "../models";
 import { getSignedUrl, createPresignedPost, s3 } from "../s3";
 import {
@@ -28,7 +28,7 @@ import {
   UPLOAD_DIRECTORY,
   STRIPE_SECRET,
   PUSHER,
-  JWT_ISSUER
+  JWT_ISSUER,
 } from "../constants";
 import { get } from "lodash";
 import mailer from "../mailer";
@@ -62,24 +62,24 @@ app.get("/admin", (req, res) => {
     include: [
       {
         model: Business,
-        include: [Student.scope("public")]
+        include: [Student.scope("public")],
       },
       {
         model: Course,
         include: [
           // Student.scope('public'),
-          Unit
-        ]
-      }
-    ]
-  }).then(admin => {
+          Unit,
+        ],
+      },
+    ],
+  }).then((admin) => {
     res.send(admin);
   });
 });
 
 app.get("/admin/subscription", (req, res) => {
   const adminId = req.user.admin.id;
-  Admin.findByPk(adminId).then(admin => {
+  Admin.findByPk(adminId).then((admin) => {
     if (admin.stripe_cust_id) {
       stripe.customers.retrieve(admin.stripe_cust_id, (err, customer) => {
         if (err) {
@@ -115,12 +115,12 @@ app.post("/admin/checkout/session", async (req, res) => {
     line_items: [
       {
         price: req.body.priceId,
-        quantity: 1
-      }
+        quantity: 1,
+      },
     ],
     mode: "subscription",
     success_url: `${req.body.successUrl}?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: req.body.cancelUrl
+    cancel_url: req.body.cancelUrl,
   });
   res.send(session);
 });
@@ -160,11 +160,11 @@ app.get("/admin/subscription_plans", async (req, res) => {
       "price",
       "price_id",
       "storageLimit",
-      "storageInBytes"
+      "storageInBytes",
     ];
     const features = keys
-      .filter(k => !notFeatureKeys.includes(k))
-      .map(k => {
+      .filter((k) => !notFeatureKeys.includes(k))
+      .map((k) => {
         return product.metadata[k];
       });
     product.price = product.metadata.price;
@@ -178,14 +178,14 @@ app.get("/admin/subscription_plans", async (req, res) => {
 
 app.post("/admin/subscription/downgrade", (req, res) => {
   const adminId = req.user.admin.id;
-  Admin.findByPk(adminId).then(admin => {
+  Admin.findByPk(adminId).then((admin) => {
     const mailData = {
       current_plan: req.body.currentPlanName,
       downgraded_plan: req.body.downgradePlanName,
       name: admin.name,
       email: admin.email,
       first_name: admin.first_name,
-      last_name: admin.last_name
+      last_name: admin.last_name,
     };
     mailer.messages().send(
       {
@@ -193,7 +193,7 @@ app.post("/admin/subscription/downgrade", (req, res) => {
         from: admin.name + " " + admin.email,
         subject: mail.downgrade.subject,
         text: mail.downgrade.text(mailData),
-        html: mail.downgrade.html(mailData)
+        html: mail.downgrade.html(mailData),
       },
       (error, body) => {
         if (error) {
@@ -201,7 +201,7 @@ app.post("/admin/subscription/downgrade", (req, res) => {
         }
         res.send({
           title: `Your downgrade request to ${req.body.downgradePlanName} has been sent`,
-          text: "The support team will contact you in 24 hours."
+          text: "The support team will contact you in 24 hours.",
         });
       }
     );
@@ -211,14 +211,14 @@ app.post("/admin/subscription/downgrade", (req, res) => {
 app.post("/admin/subscription", (req, res) => {
   const adminId = req.user.admin.id;
   const { token } = req.body;
-  Admin.findByPk(adminId).then(admin => {
+  Admin.findByPk(adminId).then((admin) => {
     if (admin.stripe_cust_id) {
       stripe.customers.retrieve(admin.stripe_cust_id, (err, customer) => {
         const subscription_id = get(customer, "subscriptions.data[0].id");
         console.log("Updating trial end:", subscription_id);
         stripe.subscriptions
           .update(subscription_id, {
-            trial_end: "now"
+            trial_end: "now",
           })
           .then(() => {
             console.log("OK");
@@ -227,7 +227,7 @@ app.post("/admin/subscription", (req, res) => {
 
       stripe.customers
         .update(admin.stripe_cust_id, {
-          source: token
+          source: token,
         })
         .then(() => {
           res.send("OK");
@@ -242,25 +242,25 @@ app.post("/admin/subscription", (req, res) => {
 
 app.get("/admin/course", (req, res) => {
   Admin.findByPk(req.user.admin.id, {
-    include: [{ model: Course, include: [Unit] }]
-  }).then(admin => {
+    include: [{ model: Course, include: [Unit] }],
+  }).then((admin) => {
     res.send(admin.courses);
   });
 });
 
 app.post("/admin/course", (req, res) => {
   const { name, businessIds = [] } = req.body;
-  Admin.findByPk(req.user.admin.id, { include: [Business] }).then(admin => {
-    const ids = admin.businesses.map(d => d.id);
+  Admin.findByPk(req.user.admin.id, { include: [Business] }).then((admin) => {
+    const ids = admin.businesses.map((d) => d.id);
     for (const id of businessIds) {
       if (ids.indexOf(id) === -1) {
         res.status(401).send({
-          message: "Unauthorized: Admin does not own Business #" + id
+          message: "Unauthorized: Admin does not own Business #" + id,
         });
         return;
       }
     }
-    createCourse(req.user.admin.id, name, businessIds).then(course => {
+    createCourse(req.user.admin.id, name, businessIds).then((course) => {
       res.send(course);
     });
   });
@@ -268,8 +268,8 @@ app.post("/admin/course", (req, res) => {
 
 app.get("/admin/course/:courseId", checkAdminPermission, (req, res) => {
   Course.findByPk(req.params.courseId, {
-    include: [Student, Business, Unit, Sponsor]
-  }).then(course => {
+    include: [Student, Business, Unit, Sponsor],
+  }).then((course) => {
     res.send(course);
   });
 });
@@ -278,7 +278,7 @@ app.get("/admin/course/:courseId", checkAdminPermission, (req, res) => {
 
 app.post("/admin/unit", checkAdminPermission, (req, res) => {
   const { name, courseId } = req.body;
-  Unit.create({ name, courseId }).then(unit => {
+  Unit.create({ name, courseId }).then((unit) => {
     res.send(unit);
   });
 });
@@ -288,11 +288,11 @@ app.get("/admin/unit/:unitId", (req, res) => {
   Unit.findByPk(unitId, {
     include: [
       {
-        model: Card
+        model: Card,
       },
-      Course
-    ]
-  }).then(unit => {
+      Course,
+    ],
+  }).then((unit) => {
     if (unit && unit.course.adminId === req.user.admin.id) {
       res.send(unit);
     } else {
@@ -307,9 +307,9 @@ app.get("/admin/unit/:unitId", (req, res) => {
 
 app.post("/admin/unit/:unitId/card", (req, res) => {
   const { unitId, name } = req.body;
-  Unit.findByPk(unitId, { include: [Course] }).then(unit => {
+  Unit.findByPk(unitId, { include: [Course] }).then((unit) => {
     if (unit.course.adminId === req.user.admin.id) {
-      Card.create({ unitId, name }).then(card => {
+      Card.create({ unitId, name }).then((card) => {
         res.send(card);
       });
     } else {
@@ -322,9 +322,9 @@ app.post("/admin/unit/:unitId/card", (req, res) => {
 
 app.post("/admin/unit/:unitId/meetingcard", (req, res) => {
   const { unitId, name, cardType, time } = req.body;
-  Unit.findByPk(unitId, { include: [Course] }).then(unit => {
+  Unit.findByPk(unitId, { include: [Course] }).then((unit) => {
     if (unit.course.adminId === req.user.admin.id) {
-      Card.create({ unitId, name, cardType, time }).then(card => {
+      Card.create({ unitId, name, cardType, time }).then((card) => {
         res.send(card);
       });
     } else {
@@ -343,17 +343,17 @@ app.get("/admin/storage/size", (req, res) => {
         model: Unit,
         include: [
           {
-            model: Card
-          }
-        ]
-      }
-    ]
-  }).then(courses => {
+            model: Card,
+          },
+        ],
+      },
+    ],
+  }).then((courses) => {
     const bytes = 0;
 
-    courses.forEach(course => {
-      course.units.forEach(unit => {
-        unit.cards.forEach(card => {
+    courses.forEach((course) => {
+      course.units.forEach((unit) => {
+        unit.cards.forEach((card) => {
           if (card.mediaId) {
             //bytes += card.mediaId.size
           }
@@ -391,9 +391,9 @@ app.post("/admin/upload-logo", (req, res) => {
     Bucket: S3_BUCKET,
     Key,
     Body: file.data,
-    ACL: "public-read"
+    ACL: "public-read",
   };
-  s3.putObject(params, err => {
+  s3.putObject(params, (err) => {
     (async () => {
       const admin = await Admin.findById(req.user.admin.id);
       admin.logo_url = Key;
@@ -413,7 +413,7 @@ app.post(
       courseIds,
       courseNames,
       req.user.admin.id
-    ).then(d => {
+    ).then((d) => {
       res.send("OK");
     });
   }
@@ -426,9 +426,9 @@ app.post("/admin/document/upload", (req, res) => {
     Bucket: S3_BUCKET,
     Key,
     Body: docs.data,
-    ACL: "public-read"
+    ACL: "public-read",
   };
-  s3.putObject(params, err => {
+  s3.putObject(params, (err) => {
     (async () => {
       // const admin = await Admin.findById(req.user.admin.id);
       // admin.logo_url = Key;
@@ -440,17 +440,17 @@ app.post("/admin/document/upload", (req, res) => {
 });
 app.get("/admin/document/:businessId", (req, res) => {
   const { businessId } = req.params;
-  Document.findAll({ where: { businessId } }).then(docs => {
+  Document.findAll({ where: { businessId } }).then((docs) => {
     res.send(docs.reverse());
   });
 });
 app.delete("/admin/document/:id", (req, res) => {
   const { id } = req.params;
-  Document.findById(id).then(docs => {
+  Document.findById(id).then((docs) => {
     const Key = docs.file;
     const params = {
       Bucket: S3_BUCKET,
-      Key
+      Key,
     };
     s3.deleteObject(params, (err, data) => {
       if (err) {
@@ -466,15 +466,15 @@ app.post("/admin/upload/:format", (req, res) => {
   const { cardId } = req.body;
   const { file } = req.files;
   Card.findById(cardId, { include: [{ model: Unit, include: [Course] }] }).then(
-    card => {
+    (card) => {
       if (card && card.unit.course.adminId === req.user.admin.id) {
         const Key = card.id + "/" + file.name;
         const params = {
           Bucket: S3_BUCKET,
           Key,
-          Body: file.data
+          Body: file.data,
         };
-        s3.putObject(params, err => {
+        s3.putObject(params, (err) => {
           if (err) {
             Logger.error(`Failed to upload file to ${S3_BUCKET}/${Key}`);
           } else {
@@ -492,7 +492,7 @@ app.post("/admin/upload/:format", (req, res) => {
         });
       } else {
         res.status(401).send({
-          message: "Unauthorized: Admin does not own Card #" + cardId
+          message: "Unauthorized: Admin does not own Card #" + cardId,
         });
       }
     }
@@ -500,20 +500,20 @@ app.post("/admin/upload/:format", (req, res) => {
 });
 
 const createCourseStudents = (studentIds, courseIds, courseNames, adminId) => {
-  const promises = studentIds.map(studentId => {
+  const promises = studentIds.map((studentId) => {
     courseIds.forEach((courseId, i) => {
       Activity.create({
         studentId,
         text: "has been assigned course " + (courseNames[i] || courseId),
-        adminId
+        adminId,
       });
     });
-    return courseIds.map(courseId =>
+    return courseIds.map((courseId) =>
       CourseStudent.findOrCreate({
         where: {
           studentId,
-          courseId
-        }
+          courseId,
+        },
       })
     );
   });
@@ -524,21 +524,21 @@ const createCourseStudents = (studentIds, courseIds, courseNames, adminId) => {
 
 app.post("/admin/student", (req, res) => {
   const { email, first_name, last_name, businessIds = [] } = req.body;
-  Admin.findByPk(req.user.admin.id, { include: [Business] }).then(admin => {
-    const ids = admin.businesses.map(d => d.id);
+  Admin.findByPk(req.user.admin.id, { include: [Business] }).then((admin) => {
+    const ids = admin.businesses.map((d) => d.id);
     for (const id of businessIds) {
       if (ids.indexOf(id) === -1) {
         res.status(401).send({
-          message: "Unauthorized: Admin does not own Business #" + id
+          message: "Unauthorized: Admin does not own Business #" + id,
         });
         return;
       }
     }
     inviteStudent({ email, first_name, last_name }, businessIds, admin.name)
-      .then(result => {
-        Business.findAll({ where: { id: businessIds } }).then(businesses => {
+      .then((result) => {
+        Business.findAll({ where: { id: businessIds } }).then((businesses) => {
           const businessNames = businesses.map(
-            b => "<strong>" + b.name + "<strong>"
+            (b) => "<strong>" + b.name + "<strong>"
           );
           Notification.create({
             message:
@@ -546,16 +546,16 @@ app.post("/admin/student", (req, res) => {
               businessNames.join(", ") +
               " business" +
               (businessNames.length > 1 ? "es" : ""),
-            studentId: result.id
-          }).then(notification => {
+            studentId: result.id,
+          }).then((notification) => {
             PUSHER.trigger("headway", `studentId:${result.id}`, {
-              notification
+              notification,
             });
           });
         });
         res.send(result);
       })
-      .catch(err => {
+      .catch((err) => {
         Logger.warn(err);
         res.status(500).send({ message: "Could not invite Student" });
       });
@@ -567,10 +567,10 @@ app.get("/admin/student", (req, res) => {
     include: [
       {
         model: Business,
-        include: [Student.scope("public")]
-      }
-    ]
-  }).then(admin => {
+        include: [Student.scope("public")],
+      },
+    ],
+  }).then((admin) => {
     res.send(admin.getStudents());
   });
 });
@@ -581,10 +581,10 @@ app.get("/admin/student/:studentId", checkAdminPermission, (req, res) => {
     .findByPk(req.params.studentId, {
       include: [
         { model: Course, where: { adminId }, required: false },
-        { model: Business, where: { adminId } }
-      ]
+        { model: Business, where: { adminId } },
+      ],
     })
-    .then(student => {
+    .then((student) => {
       res.send(student);
     });
 });
@@ -595,7 +595,7 @@ app.get(
   (req, res) => {
     const { studentId } = req.params;
     const adminId = req.user.admin.id;
-    Activity.findAll({ where: { studentId, adminId } }).then(activities => {
+    Activity.findAll({ where: { studentId, adminId } }).then((activities) => {
       res.send(activities.reverse());
     });
   }
@@ -610,21 +610,21 @@ app.get("/admin/student/:studentId/progress", (req, res) => {
           model: Course,
           where: { adminId },
           required: false,
-          include: [Unit]
-        }
-      ]
+          include: [Unit],
+        },
+      ],
     })
-    .then(student => {
+    .then((student) => {
       if (!student.courses) {
         return res.send([]);
       }
-      const data = student.courses.map(course => {
+      const data = student.courses.map((course) => {
         const { CourseStudent } = course.toJSON();
         return {
           id: course.id,
           name: course.name,
           numberOfUnits: course.units.length,
-          numberOfCompletedUnits: CourseStudent.completedUnits
+          numberOfCompletedUnits: CourseStudent.completedUnits,
         };
       });
       res.send(data);
@@ -638,22 +638,22 @@ app.delete("/admin/student/:studentId", checkAdminPermission, (req, res) => {
     .findByPk(studentId, {
       include: [
         { model: Course, where: { adminId }, required: false },
-        { model: Business, where: { adminId } }
-      ]
+        { model: Business, where: { adminId } },
+      ],
     })
-    .then(student => {
+    .then((student) => {
       Promise.all([
-        ...student.businesses.map(business =>
+        ...student.businesses.map((business) =>
           BusinessStudent.destroy({
-            where: { studentId, businessId: business.id }
+            where: { studentId, businessId: business.id },
           })
         ),
-        ...student.courses.map(course =>
+        ...student.courses.map((course) =>
           CourseStudent.destroy({ where: { studentId, courseId: course.id } })
-        )
-      ]).then(results => {
+        ),
+      ]).then((results) => {
         const businessNames = student.businesses.map(
-          b => "<strong>" + b.name + "<strong>"
+          (b) => "<strong>" + b.name + "<strong>"
         );
         Notification.create({
           message:
@@ -661,10 +661,10 @@ app.delete("/admin/student/:studentId", checkAdminPermission, (req, res) => {
             businessNames.join(", ") +
             " business" +
             (businessNames.length > 1 ? "es" : ""),
-          studentId: student.id
-        }).then(notification => {
+          studentId: student.id,
+        }).then((notification) => {
           PUSHER.trigger("headway", `studentId:${student.id}`, {
-            notification
+            notification,
           });
         });
         res.send("OK");
@@ -674,9 +674,9 @@ app.delete("/admin/student/:studentId", checkAdminPermission, (req, res) => {
 
 app.post("/admin/student-course", checkAdminPermission, (req, res) => {
   const { studentId, courseIds = [] } = req.body;
-  Admin.findByPk(req.user.admin.id, { include: [Course] }).then(admin => {
-    const adminCourseIds = admin.courses.map(course => course.id);
-    const promises = courseIds.map(courseId => {
+  Admin.findByPk(req.user.admin.id, { include: [Course] }).then((admin) => {
+    const adminCourseIds = admin.courses.map((course) => course.id);
+    const promises = courseIds.map((courseId) => {
       if (adminCourseIds.indexOf(parseInt(courseId)) === -1) {
         return res
           .status(401)
@@ -685,23 +685,25 @@ app.post("/admin/student-course", checkAdminPermission, (req, res) => {
       return CourseStudent.findOrCreate({
         where: {
           studentId,
-          courseId
-        }
+          courseId,
+        },
       });
     });
-    Promise.all(promises).then(studentCourses => {
-      Course.findAll({ where: { id: courseIds } }).then(courses => {
-        const courseNames = courses.map(c => "<strong>" + c.name + "</strong>");
+    Promise.all(promises).then((studentCourses) => {
+      Course.findAll({ where: { id: courseIds } }).then((courses) => {
+        const courseNames = courses.map(
+          (c) => "<strong>" + c.name + "</strong>"
+        );
         Notification.create({
           message:
             "You have been added to " +
             courseNames.join(", ") +
             " course" +
             (courseNames.length > 1 ? "s" : ""),
-          studentId: studentId
-        }).then(notification => {
+          studentId: studentId,
+        }).then((notification) => {
           PUSHER.trigger("headway", `studentId:${studentId}`, {
-            notification
+            notification,
           });
         });
       });
@@ -713,17 +715,17 @@ app.post("/admin/student-course", checkAdminPermission, (req, res) => {
 app.delete("/admin/student-course", checkAdminPermission, (req, res) => {
   const { studentId, courseId } = req.body;
 
-  Course.findByPk(courseId).then(course => {
-    CourseStudent.destroy({ where: { studentId, courseId } }).then(result => {
+  Course.findByPk(courseId).then((course) => {
+    CourseStudent.destroy({ where: { studentId, courseId } }).then((result) => {
       Notification.create({
         message:
           "You have been removed from <strong>" +
           course.name +
           "</strong> course",
-        studentId: studentId
-      }).then(notification => {
+        studentId: studentId,
+      }).then((notification) => {
         PUSHER.trigger("headway", `studentId:${studentId}`, {
-          notification
+          notification,
         });
       });
       res.send("OK");
@@ -733,9 +735,9 @@ app.delete("/admin/student-course", checkAdminPermission, (req, res) => {
 
 app.post("/admin/student-business", checkAdminPermission, (req, res) => {
   const { studentId, businessIds = [] } = req.body;
-  Admin.findByPk(req.user.admin.id, { include: [Business] }).then(admin => {
-    const adminBusinessIds = admin.businesses.map(business => business.id);
-    const promises = businessIds.map(businessId => {
+  Admin.findByPk(req.user.admin.id, { include: [Business] }).then((admin) => {
+    const adminBusinessIds = admin.businesses.map((business) => business.id);
+    const promises = businessIds.map((businessId) => {
       if (adminBusinessIds.indexOf(parseInt(businessId)) === -1) {
         return res
           .status(401)
@@ -744,14 +746,14 @@ app.post("/admin/student-business", checkAdminPermission, (req, res) => {
       return BusinessStudent.findOrCreate({
         where: {
           studentId,
-          businessId
-        }
+          businessId,
+        },
       });
     });
-    Promise.all(promises).then(studentBusinesses => {
-      Business.findAll({ where: { id: businessIds } }).then(businesses => {
+    Promise.all(promises).then((studentBusinesses) => {
+      Business.findAll({ where: { id: businessIds } }).then((businesses) => {
         const businessNames = businesses.map(
-          b => "<strong>" + b.name + "</strong>"
+          (b) => "<strong>" + b.name + "</strong>"
         );
         Notification.create({
           message:
@@ -759,10 +761,10 @@ app.post("/admin/student-business", checkAdminPermission, (req, res) => {
             businessNames.join(", ") +
             " business" +
             (businessNames.length > 1 ? "es" : ""),
-          studentId: studentId
-        }).then(notification => {
+          studentId: studentId,
+        }).then((notification) => {
           PUSHER.trigger("headway", `studentId:${studentId}`, {
-            notification
+            notification,
           });
         });
       });
@@ -773,18 +775,18 @@ app.post("/admin/student-business", checkAdminPermission, (req, res) => {
 
 app.delete("/admin/student-business", checkAdminPermission, (req, res) => {
   const { studentId, businessId } = req.body;
-  Business.findByPk(businessId, { include: [Course] }).then(business => {
+  Business.findByPk(businessId, { include: [Course] }).then((business) => {
     BusinessStudent.destroy({ where: { studentId, businessId } }).then(
-      result => {
+      (result) => {
         Notification.create({
           message:
             "You have been removed from <strong>" +
             business.name +
             "</strong> business",
-          studentId: studentId
-        }).then(notification => {
+          studentId: studentId,
+        }).then((notification) => {
           PUSHER.trigger("headway", `studentId:${studentId}`, {
-            notification
+            notification,
           });
         });
         res.send("OK");
@@ -795,8 +797,8 @@ app.delete("/admin/student-business", checkAdminPermission, (req, res) => {
 
 app.post("/admin/business-course", checkAdminPermission, (req, res) => {
   const { courseIds = [], businessId, courseNames } = req.body;
-  Admin.findByPk(req.user.admin.id, { include: [Business] }).then(admin => {
-    const promises = courseIds.map(courseId => {
+  Admin.findByPk(req.user.admin.id, { include: [Business] }).then((admin) => {
+    const promises = courseIds.map((courseId) => {
       // const adminBusinessIds = admin.businesses.map(business => business.id)
       // if (adminBusinessIds.indexOf(parseInt(businessId)) === -1) {
       //   return res.status(401).send({ message: 'Unauthorized: Admin does not own Business' })
@@ -804,23 +806,23 @@ app.post("/admin/business-course", checkAdminPermission, (req, res) => {
       return BusinessCourse.findOrCreate({
         where: {
           courseId,
-          businessId
-        }
+          businessId,
+        },
       });
     });
-    Promise.all(promises).then(studentBusinesses => {
+    Promise.all(promises).then((studentBusinesses) => {
       Business.findByPk(businessId, {
         include: [
           {
-            model: Student.scope("public")
+            model: Student.scope("public"),
           },
-          Course
-        ]
-      }).then(business => {
+          Course,
+        ],
+      }).then((business) => {
         const courseNames = business.courses.map(
-          c => "<strong>" + c.name + "</strong>"
+          (c) => "<strong>" + c.name + "</strong>"
         );
-        business.students.forEach(student => {
+        business.students.forEach((student) => {
           Notification.create({
             message:
               courseNames.join(", ") +
@@ -829,10 +831,10 @@ app.post("/admin/business-course", checkAdminPermission, (req, res) => {
               "added to <strong>" +
               business.name +
               "</strong> business",
-            studentId: student.id
-          }).then(notification => {
+            studentId: student.id,
+          }).then((notification) => {
             PUSHER.trigger("headway", `studentId:${student.id}`, {
-              notification
+              notification,
             });
           });
         });
@@ -847,31 +849,33 @@ app.delete("/admin/business-course", checkAdminPermission, (req, res) => {
   Business.findByPk(businessId, {
     include: [
       {
-        model: Student.scope("public")
+        model: Student.scope("public"),
       },
-      Course
-    ]
-  }).then(business => {
-    BusinessCourse.destroy({ where: { courseId, businessId } }).then(result => {
-      const course = business.courses.find(c => c.id === courseId);
+      Course,
+    ],
+  }).then((business) => {
+    BusinessCourse.destroy({ where: { courseId, businessId } }).then(
+      (result) => {
+        const course = business.courses.find((c) => c.id === courseId);
 
-      business.students.forEach(student => {
-        Notification.create({
-          message:
-            "<strong>" +
-            course.name +
-            "</strong> has been removed from <strong>" +
-            business.name +
-            "</strong> business",
-          studentId: student.id
-        }).then(notification => {
-          PUSHER.trigger("headway", `studentId:${student.id}`, {
-            notification
+        business.students.forEach((student) => {
+          Notification.create({
+            message:
+              "<strong>" +
+              course.name +
+              "</strong> has been removed from <strong>" +
+              business.name +
+              "</strong> business",
+            studentId: student.id,
+          }).then((notification) => {
+            PUSHER.trigger("headway", `studentId:${student.id}`, {
+              notification,
+            });
           });
         });
-      });
-      res.send("OK");
-    });
+        res.send("OK");
+      }
+    );
   });
 });
 
@@ -880,9 +884,9 @@ app.delete("/admin/business-course", checkAdminPermission, (req, res) => {
 app.post("/admin/business", (req, res) => {
   const adminId = req.user.admin.id;
   const { name, courseIds = [] } = req.body;
-  Business.create({ name, adminId }).then(business => {
+  Business.create({ name, adminId }).then((business) => {
     const businessId = business.id;
-    Admin.findByPk(adminId, { include: [Course] }).then(admin => {
+    Admin.findByPk(adminId, { include: [Course] }).then((admin) => {
       for (const courseId of courseIds) {
         if (admin.ownsCourse(courseId)) {
           BusinessCourse.create({ courseId, businessId });
@@ -897,7 +901,7 @@ app.post("/admin/business", (req, res) => {
 
 app.get("/admin/business", (req, res) => {
   const adminId = req.user.admin.id;
-  Admin.findByPk(adminId, { include: [{ model: Business }] }).then(admin => {
+  Admin.findByPk(adminId, { include: [{ model: Business }] }).then((admin) => {
     res.send(admin.businesses);
   });
 });
@@ -907,11 +911,11 @@ app.get("/admin/business/:businessId", checkAdminPermission, (req, res) => {
     include: [
       {
         model: Student.scope("public"),
-        include: [Course]
+        include: [Course],
       },
-      Course
-    ]
-  }).then(business => {
+      Course,
+    ],
+  }).then((business) => {
     res.send(business);
   });
 });
@@ -921,7 +925,7 @@ app.get("/admin/card/:cardId/:format", checkAdminPermission, (req, res) => {
   const { cardId, format } = req.params;
   Card.scope("includeCourse")
     .findByPk(cardId)
-    .then(card => {
+    .then((card) => {
       let filename = ""; // default
       if (format === "video") {
         filename = card.videoId;
@@ -929,7 +933,7 @@ app.get("/admin/card/:cardId/:format", checkAdminPermission, (req, res) => {
         filename = card.audioId;
       }
       const Key = `${cardId}/${filename}`;
-      getSignedUrl(Key).then(url => {
+      getSignedUrl(Key).then((url) => {
         res.send(url);
       });
     });
@@ -949,7 +953,7 @@ app.delete("/admin/card/:cardId/:format", checkAdminPermission, (req, res) => {
 
   Card.scope("includeCourse")
     .findById(cardId)
-    .then(card => {
+    .then((card) => {
       let filename;
       if (format === "video") {
         filename = card.videoId;
@@ -960,7 +964,7 @@ app.delete("/admin/card/:cardId/:format", checkAdminPermission, (req, res) => {
       // Logger.debug(`S3 deleteObject ${Key} request`)
       const params = {
         Bucket: S3_BUCKET,
-        Key
+        Key,
       };
       s3.deleteObject(params, (err, data) => {
         if (err) {
@@ -983,8 +987,8 @@ app.post("/admin/student/activity", (req, res) => {
   Activity.create({
     studentId,
     text,
-    adminId: req.user.admin.id
-  }).then(activity => {
+    adminId: req.user.admin.id,
+  }).then((activity) => {
     res.send(activity);
   });
 });
@@ -996,9 +1000,9 @@ app.post("/admin/sponsor", (req, res) => {
     website,
     message,
     courseId,
-    logo
-  }).then(sponsor => {
-    CourseSponsor.create({ courseId, sponsorId: sponsor.id }).then(d => {
+    logo,
+  }).then((sponsor) => {
+    CourseSponsor.create({ courseId, sponsorId: sponsor.id }).then((d) => {
       res.send(sponsor);
     });
   });
@@ -1019,20 +1023,13 @@ app.put("/admin/sponsor/:sponsorId", (req, res) => {
     res.send(sponsor);
   })();
 });
-app.get("/admin/sponsor/:fileId", (req, res) => {
-  //const { fileId } = req.params
+app.post("/admin/sponsor/get-logo", (req, res) => {
+  const { filename } = req.body;
   console.log("printing because do not know");
   console.log(req);
-  // File.findByPk(fileId).then(file => {
-
-  //   //const NewUrl = `https://grow2-s31.s3.us-east-2.amazonaws.com/${file.name}`
-
-  //   if (file) {
-  //     res.send(NewUrl)
-  //   } else {
-  //     res.send('')
-  //   }
-  // })
+  getSignedUrl(filename).then((url) => {
+    res.send(url);
+  });
 });
 app.post("/admin/sponsor/logo", (req, res) => {
   const { file } = req.files;
@@ -1042,17 +1039,11 @@ app.post("/admin/sponsor/logo", (req, res) => {
     Bucket: S3_BUCKET,
     Key,
     Body: file.data,
-    ACL: "public-read"
+    ACL: "public-read",
   };
-  s3.putObject(params, err => {
+  s3.putObject(params, (err) => {
     (async () => {
-      File.create({
-        type: "media",
-        size: size,
-        name: Key
-      }).then(file => {
-        res.send(file);
-      });
+      res.send(Key);
     })();
   });
 });
@@ -1064,20 +1055,20 @@ app.post("/mentor/invite", (req, res) => {
     adminId: req.body.adminId,
     userType: "mentor",
     name: req.body.name,
-    logo_url: req.body.logo_url
+    logo_url: req.body.logo_url,
   })
-    .then(mentorData => {
+    .then((mentorData) => {
       console.log(mentorData);
       const businessStudent = [];
       const bus = Business.create({
         adminId: mentorData.id,
-        name: mentorData.name
-      }).then(business => {
-        req.body.studentIds.forEach(studentId => {
+        name: mentorData.name,
+      }).then((business) => {
+        req.body.studentIds.forEach((studentId) => {
           businessStudent.push(
             BusinessStudent.create({
               businessId: business.id,
-              studentId
+              studentId,
             })
           );
         });
@@ -1090,21 +1081,21 @@ app.post("/mentor/invite", (req, res) => {
             email: mentorData.email,
             iss: JWT_ISSUER,
             userType: "mentor",
-            aud: "invite"
+            aud: "invite",
           },
           process.env.JWT_SECRET
         );
 
         // Send Mail
         const mailData = {
-          token
+          token,
         };
 
         stripe.customers.create(
           {
             email: mentorData.email,
             name: `${mentorData.first_name} ${mentorData.last_name}`,
-            description: `Mentor for ${mentorData.first_name} ${mentorData.last_name} Club`
+            description: `Mentor for ${mentorData.first_name} ${mentorData.last_name} Club`,
           },
           (err, customer) => {
             if (err) {
@@ -1114,9 +1105,9 @@ app.post("/mentor/invite", (req, res) => {
                 customer: customer.id,
                 items: [
                   {
-                    price: req.body.price
-                  }
-                ]
+                    price: req.body.price,
+                  },
+                ],
               });
 
               mentorData.stripe_cust_id = customer.id;
@@ -1135,7 +1126,7 @@ app.post("/mentor/invite", (req, res) => {
             from: mail.FROM,
             subject: mail.minvite.subject,
             text: mail.minvite.text(mailData),
-            html: mail.minvite.html(mailData)
+            html: mail.minvite.html(mailData),
           },
           (error, body) => {
             if (error) {
@@ -1148,7 +1139,7 @@ app.post("/mentor/invite", (req, res) => {
         res.send("Mentor Invited!");
       });
     })
-    .catch(error => {
+    .catch((error) => {
       res.status(400).json(error.message);
     });
 });

@@ -31,15 +31,15 @@ import { quillEditor } from "vue-quill-editor";
     AudioPlayer,
     vueDropzone: vue2Dropzone,
     DatePicker,
-    quillEditor
+    quillEditor,
   },
   filters: {
-    formatDate: function(value) {
+    formatDate: function (value) {
       if (value) {
         return moment(String(value)).format("DD MMM YYYY");
       }
-    }
-  }
+    },
+  },
 })
 export class LearningCard extends Vue {
   @Inject() toggleModal;
@@ -73,7 +73,7 @@ export class LearningCard extends Vue {
   location = "";
   attendees = [
     { name: "Test", role: "Facilitator" },
-    { name: "Test", role: "Timer" }
+    { name: "Test", role: "Timer" },
   ];
   agendaTopic = "";
   agendaActions = [];
@@ -112,22 +112,22 @@ export class LearningCard extends Vue {
       "indent",
       "clearFormatting",
       "|",
-      "insertImage"
+      "insertImage",
     ],
-    imageInsertButtons: ["imageBack", "|", "imageUpload", "imageByURL"]
+    imageInsertButtons: ["imageBack", "|", "imageUpload", "imageByURL"],
   };
 
   contentConfig = Object.assign({}, this.sharedConfig, {
     placeholderText: "Start writing",
     height: 400,
     events: {
-      "froalaEditor.image.beforeUpload": function(e, editor, files) {
+      "froalaEditor.image.beforeUpload": function (e, editor, files) {
         if (files.length) {
           // Create a File Reader.
           const reader = new FileReader();
 
           // Set the reader to insert images when they are loaded.
-          reader.onload = function(e) {
+          reader.onload = function (e) {
             const target = <any>e.target;
             const result = target.result;
             editor.image.insert(result, null, null, editor.image.get());
@@ -148,8 +148,8 @@ export class LearningCard extends Vue {
         setTimeout(() => {
           this.save();
         }, 500);
-      }
-    }
+      },
+    },
   });
 
   evidenceConfig = Object.assign({}, this.sharedConfig, {
@@ -157,13 +157,13 @@ export class LearningCard extends Vue {
       "Ask your users to perform a practical task related to the content in this card",
     height: 150,
     events: {
-      "froalaEditor.image.beforeUpload": function(e, editor, files) {
+      "froalaEditor.image.beforeUpload": function (e, editor, files) {
         if (files.length) {
           // Create a File Reader.
           const reader = new FileReader();
 
           // Set the reader to insert images when they are loaded.
-          reader.onload = function(e) {
+          reader.onload = function (e) {
             const target = <any>e.target;
             const result = target.result;
             editor.image.insert(result, null, null, editor.image.get());
@@ -184,8 +184,8 @@ export class LearningCard extends Vue {
         setTimeout(() => {
           this.save();
         }, 500);
-      }
-    }
+      },
+    },
   });
 
   $refs: {
@@ -272,9 +272,9 @@ export class LearningCard extends Vue {
       this.fileId = newVal[0].logo;
       store
         .dispatch("getSponsorLogo", {
-          fileId: this.fileId
+          filename: this.fileId,
         })
-        .then(url => {
+        .then((url) => {
           this.logo = url;
         });
     } else {
@@ -301,7 +301,7 @@ export class LearningCard extends Vue {
     maxFiles: 1,
     maxFilesize: 5, // mb
     timeout: 99999999,
-    uploadprogress: this.audioUploadProgress
+    uploadprogress: this.audioUploadProgress,
   };
 
   awss3 = {
@@ -309,7 +309,7 @@ export class LearningCard extends Vue {
     headers: {},
     params: {},
     sendFileToServer: false, // switching to false causes issues. try again
-    withCredentials: false
+    withCredentials: false,
   };
   signingUrl(f) {
     return (
@@ -326,7 +326,7 @@ export class LearningCard extends Vue {
     maxFiles: 1,
     maxFilesize: 25, // mb
     timeout: 99999999,
-    uploadprogress: this.videoUploadProgress
+    uploadprogress: this.videoUploadProgress,
   };
 
   youtubeDropzoneOptions = {
@@ -335,16 +335,16 @@ export class LearningCard extends Vue {
     maxFiles: 1,
     maxFilesize: 25, // mb
     timeout: 99999999,
-    uploadprogress: this.youtubeUploadProgress
+    uploadprogress: this.youtubeUploadProgress,
   };
 
   updateFileSrc(format) {
     store
       .dispatch("getFileUrl", {
         cardId: this.currentCard.id,
-        format: format
+        format: format,
       })
-      .then(url => {
+      .then((url) => {
         console.log("format is:" + format);
         switch (format) {
           case "audio":
@@ -404,8 +404,8 @@ export class LearningCard extends Vue {
       cardId: parseInt(this.route.params.cardId),
       file: {
         name: file.name,
-        type: "audio"
-      }
+        type: "audio",
+      },
     };
     console.log("payload", payload);
 
@@ -423,7 +423,7 @@ export class LearningCard extends Vue {
       return;
     }
     Axios.get(BASE_URL + "/admin/card/" + this.currentCard.id + "/video").then(
-      d => {
+      (d) => {
         console.log(d.data);
         if (this.$refs.video) {
           this.$refs.video.setAttribute("src", d.data);
@@ -451,8 +451,8 @@ export class LearningCard extends Vue {
       cardId: parseInt(this.route.params.cardId),
       file: {
         name: response.id,
-        type: "youtube"
-      }
+        type: "youtube",
+      },
     };
     this.youtubeIsUploading = false;
     this.$refs.YoutubeDropzone.removeAllFiles(true);
@@ -468,7 +468,7 @@ export class LearningCard extends Vue {
     }
     store.commit("set", {
       key: "removeAudioCardId",
-      value: this.$route.params.cardId
+      value: this.$route.params.cardId,
     });
     this.currentCard.audioId = null;
     this.toggleModal("removeAudio");
@@ -486,7 +486,7 @@ export class LearningCard extends Vue {
     }
     store.commit("set", {
       key: "removeVideoCardId",
-      value: this.$route.params.cardId
+      value: this.$route.params.cardId,
     });
     this.currentCard.videoId = null;
     this.toggleModal("removeVideo");
@@ -530,9 +530,9 @@ export class LearningCard extends Vue {
       this.fileId = this.sponsors[0].logo;
       store
         .dispatch("getSponsorLogo", {
-          fileId: this.fileId
+          filename: this.fileId,
         })
-        .then(url => {
+        .then((url) => {
           this.logo = url;
         });
     } else {
@@ -551,13 +551,13 @@ export class LearningCard extends Vue {
       id: this.currentCard.id,
       name: this.name,
       evidence_task: this.evidence,
-      content: this.content
+      content: this.content,
     });
   }
 
   addAction(a, aIndex) {
     const action: Action = {
-      text: ""
+      text: "",
     };
     this.agendaActions[a].actions.push(action);
     console.log(this.agendaActions);
@@ -576,9 +576,9 @@ export class LearningCard extends Vue {
       topic: "",
       actions: [
         {
-          text: ""
-        }
-      ]
+          text: "",
+        },
+      ],
     };
     this.agendaActions.push(action);
     console.log(this.agendaActions);
@@ -603,7 +603,7 @@ export class LearningCard extends Vue {
       location: this.location,
       agendaActions: JSON.stringify(this.agendaActions),
       agendaTopic: this.agendaTopic,
-      attendees: JSON.stringify(this.attendees)
+      attendees: JSON.stringify(this.attendees),
     });
   }
 }
