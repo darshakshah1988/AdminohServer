@@ -1,31 +1,39 @@
-import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
+import { Component, Prop, Watch, Vue } from "vue-property-decorator";
 
-import { ProgressBar } from '../../shared/ProgressBar'
+import { ProgressBar } from "../../shared/ProgressBar";
 
-import './StudentTile.scss'
+import "./StudentTile.scss";
 
-import store from '../../../store'
+import store from "../../../store";
 
 @Component({
-    template: require('./StudentTile.html'),
-    name: 'StudentTile',
-    components: {
-        ProgressBar
-    }
+  template: require("./StudentTile.html"),
+  name: "StudentTile",
+  components: {
+    ProgressBar,
+  },
 })
-
 export class StudentTile extends Vue {
-    @Prop({ default: () => {} }) student: Object
+  @Prop({ default: () => {} }) student: any;
 
-    progress = []
+  progress = [];
 
-    @Watch('student', { deep: true })
-    onStudentChanged(newVal, oldVal) {
-        if (newVal.BusinessStudent) {
-            store.dispatch('fetchStudentProgress', newVal.BusinessStudent)
-                .then(progress => {
-                    this.progress = progress
-                })
-        }
+  @Watch("student", { deep: true })
+  onStudentChanged(newVal, oldVal) {
+    if (newVal.BusinessStudent) {
+      store
+        .dispatch("fetchStudentProgress", newVal.BusinessStudent)
+        .then((progress) => {
+          this.progress = progress;
+        });
     }
+  }
+
+  mounted() {
+    store
+      .dispatch("fetchStudentProgress", this.student.BusinessStudent)
+      .then((progress) => {
+        this.progress = progress;
+      });
+  }
 }
