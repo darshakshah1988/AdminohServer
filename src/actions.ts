@@ -178,6 +178,11 @@ export const actions = {
       .get(BASE_URL + "/student/card/" + cardId + "/" + format)
       .then(({ data }) => data);
   },
+  getStudentSponsorLogo(context, { filename }) {
+    return axios
+      .post(BASE_URL + "/student/sponsor/get-logo", { filename })
+      .then(({ data }) => data);
+  },
   getStudentCard(context, { courseId, unitId, cardId }) {
     if (!context.activeStudentCourse) {
       return axios.get(BASE_URL + "/student/course/" + courseId).then((res) => {
@@ -193,6 +198,7 @@ export const actions = {
           (card) => card.id === cardId
         );
         // context.commit('setActiveStudentCourse', res.data)
+        context.commit("setSponsors", course.sponsors);
         context.commit("setActiveStudentCard", unit.cards[activeCardIndex]);
       });
     } else {

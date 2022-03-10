@@ -215,13 +215,13 @@ app.post("/admin/subscription", (req, res) => {
     if (admin.stripe_cust_id) {
       stripe.customers.retrieve(admin.stripe_cust_id, (err, customer) => {
         const subscription_id = get(customer, "subscriptions.data[0].id");
-        console.log("Updating trial end:", subscription_id);
+        //console.log("Updating trial end:", subscription_id);
         stripe.subscriptions
           .update(subscription_id, {
             trial_end: "now",
           })
           .then(() => {
-            console.log("OK");
+            //console.log("OK");
           });
       });
 
@@ -921,7 +921,7 @@ app.get("/admin/business/:businessId", checkAdminPermission, (req, res) => {
 });
 
 app.get("/admin/card/:cardId/:format", checkAdminPermission, (req, res) => {
-  console.log(req.params.format);
+  //console.log(req.params.format);
   const { cardId, format } = req.params;
   Card.scope("includeCourse")
     .findByPk(cardId)
@@ -1025,8 +1025,8 @@ app.put("/admin/sponsor/:sponsorId", (req, res) => {
 });
 app.post("/admin/sponsor/get-logo", (req, res) => {
   const { filename } = req.body;
-  console.log("printing because do not know");
-  console.log(req);
+  //console.log("printing because do not know");
+  //console.log(req);
   getSignedUrl(filename).then((url) => {
     res.send(url);
   });
@@ -1058,7 +1058,7 @@ app.post("/mentor/invite", (req, res) => {
     logo_url: req.body.logo_url,
   })
     .then((mentorData) => {
-      console.log(mentorData);
+      //console.log(mentorData);
       const businessStudent = [];
       const bus = Business.create({
         adminId: mentorData.id,
@@ -1116,9 +1116,9 @@ app.post("/mentor/invite", (req, res) => {
           }
         );
 
-        console.log("\n\n");
-        console.log("http://localhost:5000/mconfirm?token=" + token);
-        console.log("\n\n");
+        // console.log("\n\n");
+        // console.log("http://localhost:5000/mconfirm?token=" + token);
+        // console.log("\n\n");
 
         mailer.messages().send(
           {

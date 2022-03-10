@@ -26,7 +26,7 @@
   height: 0;
   overflow: hidden;
   z-index: -1;
-  content: url('/assets/img/correct.png') url('/assets/img/incorrect.png');
+  content: url("/assets/img/correct.png") url("/assets/img/incorrect.png");
 }
 
 .StudentCard__task {
@@ -170,9 +170,29 @@
   transform: translateY(0);
 }
 
-
-@media(min-width: 1000px) {
-
+.Mobile__sponsor {
+  flex: 1;
+  display: flex;
+  // background: #fff;
+  .Mobile__sponsor-logo {
+    width: 25%;
+    float: left;
+    padding: 10px;
+  }
+  .Mobile__sponsor-details {
+    float: left;
+    width: 75%;
+    padding: 10px 10px 10px 0;
+    p,
+    h3 {
+      margin-bottom: 0px;
+    }
+    a {
+      color: #4a749a;
+    }
+  }
+}
+@media (min-width: 1000px) {
   .StudentCard__footer .container {
     justify-content: flex-end;
   }

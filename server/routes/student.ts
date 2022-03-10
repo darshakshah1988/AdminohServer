@@ -84,7 +84,7 @@ app.put("/update-student-details", authStudentInvite, (req, res) => {
 
 app.get("/student/course/:courseId", checkStudentEnrolled, (req, res) => {
   Course.findByPk(req.params.courseId, {
-    include: [Student, Business, Unit, Sponsor],
+    include: [{ model: Unit, include: [Card] }, Business, Sponsor],
   }).then((course) => {
     course.units.forEach((unit) => {
       if (unit.sortOrder && unit.cards) {
@@ -100,7 +100,14 @@ app.get("/student/course/:courseId", checkStudentEnrolled, (req, res) => {
     res.send(course);
   });
 });
-
+app.post("/student/sponsor/get-logo", (req, res) => {
+  const { filename } = req.body;
+  //console.log("printing because do not know");
+  //console.log(req);
+  getSignedUrl(filename).then((url) => {
+    res.send(url);
+  });
+});
 app.get("/student/activity", (req, res) => {
   const studentId = req.user.student.id;
   Activity.findAll({

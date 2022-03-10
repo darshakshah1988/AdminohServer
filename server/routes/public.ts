@@ -9,7 +9,7 @@ import {
   authStudent,
   authAdminInvite,
   hashPassword,
-  authMentorInvite
+  authMentorInvite,
 } from "../authentication";
 import mailer from "../mailer";
 import mail from "../mail";
@@ -25,7 +25,7 @@ import {
   BusinessStudent,
   BusinessCourse,
   CourseStudent,
-  Activity
+  Activity,
 } from "../models";
 
 const SERVER_STARTUP = new Date();
@@ -43,7 +43,7 @@ app.get("/user", (req, res) => {
 });
 
 app.get("/logout", (req, res) => {
-  console.log(req, res);
+  //console.log(req, res);
   req.logout();
   res.redirect("/");
 });
@@ -59,14 +59,14 @@ app.post("/register", (req, res) => {
     first_name: req.body.first_name,
     last_name: req.body.last_name,
     email: req.body.email,
-    password
+    password,
   };
   createAdmin(data)
-    .then(admin => {
+    .then((admin) => {
       if (admin == null) {
         res.send({
           success: false,
-          message: "This email is already registered. Please login"
+          message: "This email is already registered. Please login",
         });
       } else {
         // Send confirmation email
@@ -79,19 +79,19 @@ app.post("/register", (req, res) => {
             email: admin.email,
             iss: JWT_ISSUER,
             userType: "admin",
-            aud: "invite"
+            aud: "invite",
           },
           process.env.JWT_SECRET
         );
 
-        console.log("\n\n");
-        console.log("http://localhost:5000/confirm?token=" + token);
-        console.log("\n\n");
+        // console.log("\n\n");
+        // console.log("http://localhost:5000/confirm?token=" + token);
+        // console.log("\n\n");
 
         const mailData = {
           token,
           name: data.name,
-          first_name: admin.first_name
+          first_name: admin.first_name,
         };
         mailer.messages().send(
           {
@@ -99,7 +99,7 @@ app.post("/register", (req, res) => {
             from: mail.FROM,
             subject: mail.welcome.subject(admin.name),
             text: mail.welcome.text(mailData),
-            html: mail.welcome.html(mailData)
+            html: mail.welcome.html(mailData),
           },
           (error, body) => {
             if (error) {
@@ -112,7 +112,7 @@ app.post("/register", (req, res) => {
           {
             email: admin.email,
             name: `${admin.first_name} ${admin.last_name}`,
-            description: `Admin for ${admin.name} Club`
+            description: `Admin for ${admin.name} Club`,
           },
           (err, customer) => {
             if (err) {
@@ -122,9 +122,9 @@ app.post("/register", (req, res) => {
                 customer: customer.id,
                 items: [
                   {
-                    price: "price_1JCMuRKPfGilLJKfplNEY1ir"
-                  }
-                ]
+                    price: "price_1JCMuRKPfGilLJKfplNEY1ir",
+                  },
+                ],
               });
 
               admin.stripe_cust_id = customer.id;
@@ -144,24 +144,24 @@ app.post("/register", (req, res) => {
 
         return Business.create({
           adminId: admin.id,
-          name: admin.name
-        }).then(business => {
+          name: admin.name,
+        }).then((business) => {
           res.send({
             success: true,
             message:
-              "Registration successfully done! Please check verification email for further process!"
+              "Registration successfully done! Please check verification email for further process!",
           });
         });
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.warn(err);
       res.status(500).send({ message: "Could not register" });
     });
 });
 
-const sendPasswordResetEmail = user => {
-  console.log("Send email to ", user.userType);
+const sendPasswordResetEmail = (user) => {
+  //console.log("Send email to ", user.userType);
   const token = jwt.sign(
     {
       sub: user.id,
@@ -169,14 +169,14 @@ const sendPasswordResetEmail = user => {
       email: user.email,
       iss: JWT_ISSUER,
       userType: user.userType,
-      aud: "invite" // WARNING: should be reset-password? sharing passport strategy though...
+      aud: "invite", // WARNING: should be reset-password? sharing passport strategy though...
     },
     process.env.JWT_SECRET
   );
 
-  console.log("http://localhost:5000/reset-password?token=" + token);
+  //console.log("http://localhost:5000/reset-password?token=" + token);
   const mailData = {
-    token
+    token,
   };
   mailer.messages().send(
     {
@@ -184,7 +184,7 @@ const sendPasswordResetEmail = user => {
       from: mail.FROM,
       subject: mail.resetPassword.subject,
       text: mail.resetPassword.text(mailData),
-      html: mail.resetPassword.html(mailData)
+      html: mail.resetPassword.html(mailData),
     },
     (error, body) => {
       if (error) {
@@ -196,12 +196,12 @@ const sendPasswordResetEmail = user => {
 
 app.post("/forgot-password", (req, res) => {
   const { email } = req.body;
-  Admin.findOne({ where: { email } }).then(admin => {
+  Admin.findOne({ where: { email } }).then((admin) => {
     if (admin) {
       sendPasswordResetEmail(admin);
       res.send({ success: true, message: "Reset email sent" });
     } else {
-      Student.findOne({ where: { email } }).then(student => {
+      Student.findOne({ where: { email } }).then((student) => {
         if (student) {
           sendPasswordResetEmail(student);
           res.send({ success: true, message: "Reset email sent" });
@@ -248,6 +248,6 @@ app.post("/login/student", authStudent, (req, res) => {
 
 app.post("/stripe/hook", (req, res, next) => {
   const { id, type, data } = req.body;
-  console.log("stripe hook", id, type);
+  //console.log("stripe hook", id, type);
   res.sendStatus(200);
 });
